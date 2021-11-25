@@ -1,3 +1,4 @@
+Project of Nicolas, Guillaume and Alban. Template by X. Gandibleux 
 # momhMKPstu
 Project 2021 of MOMH on the Bi-01MKP. 
 
