@@ -13,7 +13,7 @@ function copy(x::solution)
 end
 
 function ==(x::solution, y::solution)
-    return x.val_objectif == y.val_objectif && x.sol == y.sol && x.cout == y.cout
+    return x.sol == y.sol
 end
 # C = [1 2 0 1; 1 1 1 2]
 # A = [1 5 3 3; 5 1 1 6; 1 1 9 2]
@@ -93,15 +93,26 @@ end
 
 function swap(x::solution, k::Int, prob::_bi01IP)
     iter = 0
+    swap_idx1 = 1
+    swap_idx2 = 1
+    swap_tuples1 = randperm(length(x.sol))
+    swap_tuples2 = randperm(length(x.sol))
     xPrime = copy(x)
     while iter < k
-        rand1 = rand(1:length(xPrime.sol))
-        rand2 = rand(1:length(xPrime.sol))
+        rand1 = swap_tuples1[swap_idx1]
+        rand2 = swap_tuples2[swap_idx2]
         xPrime.sol[rand1], xPrime.sol[rand2] = xPrime.sol[rand2], xPrime.sol[rand1]
         if verification(prob, xPrime)
             iter += 1
         else
             xPrime.sol[rand1], xPrime.sol[rand2] = xPrime.sol[rand1], xPrime.sol[rand2]
+        end
+        swap_idx1 = swap_idx1 % length(x.sol) + 1
+        if swap_idx1 == 1
+            swap_idx2 += 1
+        end
+        if swap_idx2 > length(x.sol)
+            return x
         end
     end
     return xPrime
@@ -156,17 +167,20 @@ function replace(x::solution, i::Int)
 end
 
 function voisinage_un_echange(x::solution, prob::_bi01IP)
-    N::Vector{solution} = []
-    push!(N, x)
+    N::Vector{solution} = Vector{solution}(undef, length(x.sol) * length(x.sol))
+    index = 1
+    N[index] = x
+    index += 1
     for i = 1:length(x.sol)
         for j = i+1:length(x.sol)
             xPrime = swap(x, i, j)
             if verification(prob, xPrime) && x != xPrime
-                push!(N, xPrime)
+                N[index] = xPrime
+                index += 1
             end
         end
     end
-    return unique(x -> x.sol, N)
+    return unique(x -> x.sol, N[1:index-1])
 end
 
 function voisinage_deux_echange(x::solution, prob::_bi01IP)
