@@ -44,14 +44,14 @@ end
 
 # ------------------------------------------------------------------------------
 # display different results
-function displayGraphics(fname, YN, YFea)
+function displayGraphics(fname, YN, color)
     PlotOrthonormedAxis = true  # Axis orthonormed or not
     DisplayYN = true          # Non-dominated points corresponding to efficient solutions
     DisplayUBS = false         # Points belonging to the Upper Bound Set
     DisplayLBS = false         # Points belonging to the Lower Bound Set
     DisplayInt = false         # Points corresponding to integer solutions
     DisplayProj = false         # Points corresponding to projected solutions
-    DisplayFea = true         # Points corresponding to feasible solutions
+    DisplayFea = false         # Points corresponding to feasible solutions
     DisplayPer = false         # Points corresponding to perturbated solutions
 
     YN_1 = []
@@ -59,12 +59,6 @@ function displayGraphics(fname, YN, YFea)
     for i = 1:length(YN)
         push!(YN_1, YN[i][1])
         push!(YN_2, YN[i][2])
-    end
-    XFeas = []
-    YFeas = []
-    for i = 1:length(YN)
-        push!(XFeas, YFea[i][1])
-        push!(YFeas, YFea[i][2])
     end
     # --------------------------------------------------------------------------
     # Setup
@@ -83,12 +77,12 @@ function displayGraphics(fname, YN, YFea)
     # Display Non-Dominated points
     if DisplayYN
         # display only the points corresponding to non-dominated points
-        scatter(YN_1, YN_2, color = "black", marker = "+", label = L"y \in Y_N")
+        scatter(YN_1, YN_2, color = color, marker = "+", label = L"y \in Y_N")
         # display segments joining adjacent non-dominated points
-        plot(YN_1, YN_2, color = "black", linewidth = 0.75, marker = "+", markersize = 1.0, linestyle = ":")
+        plot(YN_1, YN_2, color = color, linewidth = 0.75, marker = "+", markersize = 1.0, linestyle = ":")
         # display segments joining non-dominated points and their corners points
         Env1, Env2 = computeCornerPointsLowerEnvelop(YN_1, YN_2)
-        plot(Env1, Env2, color = "black", linewidth = 0.75, marker = "+", markersize = 1.0, linestyle = ":")
+        plot(Env1, Env2, color = color, linewidth = 0.75, marker = "+", markersize = 1.0, linestyle = ":")
     end
 
     # --------------------------------------------------------------------------
