@@ -21,19 +21,20 @@ function vSolveBi01IP(solverSelected, C, A, B)
 
   # ---- setting the model
   println("Building...")
-  Bi01IP = vModel( solverSelected )
-  @variable( Bi01IP, x[1:n], Bin )
-  @addobjective( Bi01IP, Max, sum(C[1,j] * x[j] for j=1:n) )
-  @addobjective( Bi01IP, Max, sum(C[2,j] * x[j] for j=1:n) )
-  @constraint( Bi01IP, cte[i=1:m], sum(A[i,j] * x[j] for j=1:n) <= B[i])
+  Bi01IP = vModel(solverSelected)
+  set_silent(Bi01IP)
+  @variable(Bi01IP, x[1:n], Bin)
+  @addobjective(Bi01IP, Max, sum(C[1, j] * x[j] for j = 1:n))
+  @addobjective(Bi01IP, Max, sum(C[2, j] * x[j] for j = 1:n))
+  @constraint(Bi01IP, cte[i = 1:m], sum(A[i, j] * x[j] for j = 1:n) <= B[i])
 
   # ---- Invoking the solver (epsilon constraint method)
   println("Solving...")
-  vSolve( Bi01IP, method=:epsilon, step=0.5, verbose=true )
+  vSolve(Bi01IP, method = :epsilon, step = 0.5, verbose = true)
 
   # ---- Querying the results
   println("Querying...")
-  Y_N = getY_N( Bi01IP )
+  Y_N = getY_N(Bi01IP)
 
   return Y_N, x
 end

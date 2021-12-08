@@ -36,8 +36,8 @@ function main(name::String, flag::Int)
         YN = Yn_int
     else
         YN = TOOL_read_YN(name)
-        displayGraphics(fname, YN, "black")
     end
+    displayGraphics(fname, YN, "black")
     #VNS
     println("VNS")
     print("temps gen pop : ")
@@ -62,4 +62,4 @@ function main(name::String, flag::Int)
     println("(|YN_VNS|,|YN_NSGA|,|YN|)", (length(YN_VNS), length(YN_NSGA), length(YN)))
 
 end
-main("knapsack.100.2", 1)
+main("knapsack.100.4", 1)

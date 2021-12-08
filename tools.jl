@@ -18,7 +18,7 @@ function TOOL_read_YN(name)
 end
 
 function TOOL_write_YN(YN::Vector{Vector{Int}}, name)
-    way = string("YN/" * name * ".txt")
+    way = string("YN/" * name * ".DAT")
     open(way, "w") do f
 
         println(f, string(length(YN)))
