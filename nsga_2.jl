@@ -53,11 +53,35 @@ function genererPopulation(nIndividus::Int, prob::_bi01IP)
     pop[len] = x2
     len += 1
 
-    for i = 1:(nIndividus-2)
+    delta2 = abs(x2.y[2] - x1.y[2])
+    delta1 = abs(x2.y[1] - x1.y[1])
+
+    step = delta2 / 10 / 2
+
+    i = 1
+    while i * step < delta2
+        x = Individu(solutionEpsilon(prob, 1, x1.y[2] + i * step), [0, 0], 0, [], 0, 0.0)
+        x = updateY(x, prob)
+        pop[len] = x
+        len += 1
+        i += 1
+    end
+    step = delta1 / 10 / 2
+    i = 1
+
+    while i * step < delta1
+        x = Individu(solutionEpsilon(prob, 2, x2.y[1] + i * step), [0, 0], 0, [], 0, 0.0)
+        x = updateY(x, prob)
+        pop[len] = x
+        len += 1
+        i += 1
+    end
+
+    while len <= nIndividus
         sol = solution([], zeros(size(prob.C, 2)), [])
         rand_indexes = randperm(length(sol.sol))
         idx = 1
-        while verification_NSGA(prob, sol)
+        while verification(prob, sol)
             sol.sol[rand_indexes[idx]] = 1
             idx += 1
         end
@@ -295,8 +319,8 @@ function kung(population::Array{Individu,1})
 end
 
 function nsga2(nIndividus::Int, nGenerations::Int, probCrossover::Float64, probMutation::Float64, prob::_bi01IP, timeAllowed)
-    print("temps de gen de pop :")
-    @time population = genererPopulation(nIndividus, prob)
+    #print("temps de gen de pop :")
+    population = genererPopulation(nIndividus, prob)
     triNonDomine(population)
     t = 0.0
     start = time()
@@ -311,9 +335,9 @@ function nsga2(nIndividus::Int, nGenerations::Int, probCrossover::Float64, probM
         gen += 1
     end
     SN = kung(population)
-    println("pts non dominés : ", length(SN))
-    println("generations : ", gen)
-    println("time : ", time() - start)
+    # println("pts non dominés : ", length(SN))
+    # println("generations : ", gen)
+    # println("time : ", time() - start)
     return SN
 end
 

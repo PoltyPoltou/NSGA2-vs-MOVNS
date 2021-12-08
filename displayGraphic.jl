@@ -44,7 +44,7 @@ end
 
 # ------------------------------------------------------------------------------
 # display different results
-function displayGraphics(fname, YN, color)
+function displayGraphics(fname, YN, color, label)
     PlotOrthonormedAxis = true  # Axis orthonormed or not
     DisplayYN = true          # Non-dominated points corresponding to efficient solutions
     DisplayUBS = false         # Points belonging to the Upper Bound Set
@@ -77,7 +77,7 @@ function displayGraphics(fname, YN, color)
     # Display Non-Dominated points
     if DisplayYN
         # display only the points corresponding to non-dominated points
-        scatter(YN_1, YN_2, color = color, marker = "+", label = L"y \in Y_N")
+        scatter(YN_1, YN_2, color = color, marker = "+", label = label)
         # display segments joining adjacent non-dominated points
         plot(YN_1, YN_2, color = color, linewidth = 0.75, marker = "+", markersize = 1.0, linestyle = ":")
         # display segments joining non-dominated points and their corners points

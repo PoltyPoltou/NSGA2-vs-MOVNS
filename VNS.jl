@@ -21,14 +21,14 @@ end
 # Sélectionne les points pour former l'ensemble bornant primal
 function kung(E::Array{solution,1}, EPrime::Array{solution,1})
     S = union(E, EPrime)
-    sort!(S, by = x -> x.val_objectif[1])
+    sort!(S, by = x -> x.val_objectif[1] + x.val_objectif[2] / 100000)
     SN::Vector{solution} = []
     push!(SN, S[1])
-    minYFeas = S[1].val_objectif[2]
+    minYFeas = S[1].val_objectif
     for i = 2:length(S)
-        if S[i].val_objectif[2] < minYFeas
+        if S[i].val_objectif[2] < minYFeas[2] && S[i].val_objectif[1] > minYFeas[1]
             push!(SN, S[i])
-            minYFeas = S[i].val_objectif[2]
+            minYFeas = S[i].val_objectif
         end
     end
     return SN
@@ -259,8 +259,8 @@ function GVNS(E::Array{solution,1}, k_max::Int, t_max::Int, type_shake::Int, pro
         end
         loops += 1
     end
-    println("time used : ", t, " loops : ", loops)
-    return E
+    #println("time used : ", t, " loops : ", loops)
+    return E, t
 end
 function initPop(nIndiv::Int, prob::_bi01IP)
     population = Vector{solution}(undef, nIndiv)

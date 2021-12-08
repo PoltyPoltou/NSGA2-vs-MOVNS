@@ -20,7 +20,7 @@ function vSolveBi01IP(solverSelected, C, A, B)
   m, n = size(A)
 
   # ---- setting the model
-  println("Building...")
+  # println("Building...")
   Bi01IP = vModel(solverSelected)
   set_silent(Bi01IP)
   @variable(Bi01IP, x[1:n], Bin)
@@ -29,11 +29,11 @@ function vSolveBi01IP(solverSelected, C, A, B)
   @constraint(Bi01IP, cte[i = 1:m], sum(A[i, j] * x[j] for j = 1:n) <= B[i])
 
   # ---- Invoking the solver (epsilon constraint method)
-  println("Solving...")
-  vSolve(Bi01IP, method = :epsilon, step = 0.5, verbose = true)
+  #println("Solving...")
+  vSolve(Bi01IP, method = :epsilon, step = 0.5, verbose = false)
 
   # ---- Querying the results
-  println("Querying...")
+  #println("Querying...")
   Y_N = getY_N(Bi01IP)
 
   return Y_N, x
