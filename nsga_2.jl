@@ -294,14 +294,14 @@ function kung(population::Array{Individu,1})
     return SN
 end
 
-function nsga2(nIndividus::Int, nGenerations::Int, probCrossover::Float64, probMutation::Float64, prob::_bi01IP)
-    start = time()
-    population = genererPopulation(nIndividus, prob)
+function nsga2(nIndividus::Int, nGenerations::Int, probCrossover::Float64, probMutation::Float64, prob::_bi01IP, timeAllowed)
+    print("temps de gen de pop :")
+    @time population = genererPopulation(nIndividus, prob)
     triNonDomine(population)
     t = 0.0
     start = time()
     gen = 0
-    while gen < nGenerations && t < 60
+    while gen < nGenerations && t < timeAllowed
         enfants = genererPopulationEnfants(nIndividus, probCrossover, probMutation, population, prob)
         popTotale = union(enfants, population)
         triNonDomine(popTotale)
