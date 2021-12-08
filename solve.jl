@@ -4,9 +4,9 @@ include("vOptMomkp.jl")
 include("displayGraphic.jl")
 include("VNS.jl")
 include("MOKP.jl")
-include("SaveYN.jl")
+include("tools.jl")
 using CPLEX
-name = "knapsack.250.3"
+name = "knapsack.500.2"
 fname = "instancesZL/" * name
 
 momkpZL = readInstanceMOMKPformatZL(false, fname)
