@@ -57,6 +57,20 @@ function verification(prob::_bi01IP, x::solution)
     end
 end
 
+function verification_swap(prob::_bi01IP, x::solution, i::Int, j::Int)
+    for l = 1:size(prob.A, 1)
+        x.cout[l] += prob.A[l, j] * (x.sol[j] - x.sol[i]) + prob.A[l, i] * (x.sol[i] - x.sol[j])
+    end
+    x.val_objectif[1] -= prob.C[1, j] * (x.sol[j] - x.sol[i]) + prob.C[1, i] * (x.sol[i] - x.sol[j])
+    x.val_objectif[2] -= prob.C[2, j] * (x.sol[j] - x.sol[i]) + prob.C[2, i] * (x.sol[i] - x.sol[j])
+
+    if sum(x.cout .<= prob.b) == length(prob.b)
+        return true
+    else
+        return false
+    end
+end
+
 function no_dominated(x::solution, E::Array{solution,1})
     # E must be sorted lexicographically to work
     pos = 0
@@ -102,7 +116,7 @@ function swap(x::solution, k::Int, prob::_bi01IP)
         rand1 = swap_tuples1[swap_idx1]
         rand2 = swap_tuples2[swap_idx2]
         xPrime.sol[rand1], xPrime.sol[rand2] = xPrime.sol[rand2], xPrime.sol[rand1]
-        if verification(prob, xPrime)
+        if verification_swap(prob, xPrime, rand1, rand2)
             iter += 1
         else
             xPrime.sol[rand1], xPrime.sol[rand2] = xPrime.sol[rand1], xPrime.sol[rand2]
@@ -174,7 +188,7 @@ function voisinage_un_echange(x::solution, prob::_bi01IP)
     for i = 1:length(x.sol)
         for j = i+1:length(x.sol)
             xPrime = swap(x, i, j)
-            if verification(prob, xPrime) && x != xPrime
+            if verification_swap(prob, xPrime, i, j) && x != xPrime
                 N[index] = xPrime
                 index += 1
             end
@@ -183,16 +197,7 @@ function voisinage_un_echange(x::solution, prob::_bi01IP)
     return unique(x -> x.sol, N[1:index-1])
 end
 
-function voisinage_deux_echange(x::solution, prob::_bi01IP)
-    N = []
-    N_un_echange = voisinage_un_echange(x, prob)
-    for xPrime in N_un_echange
-        union!(N, voisinage_un_echange(xPrime, prob))
-    end
-    return unique(x -> x.sol, N)
-end
-
-function replace_neighborhood(x::solution, k::Int, prob::_bi01IP)
+function replace_neighborhood(x::solution, prob::_bi01IP)
     N = []
     for i = 1:length(x.sol)
         xPrime = replace(x, i)
@@ -200,32 +205,25 @@ function replace_neighborhood(x::solution, k::Int, prob::_bi01IP)
             push!(N, xPrime)
         end
     end
-    if k != 1
-        NPrime = []
-        for xPrime in N
-            union!(NPrime, replace_neighborhood(xPrime, k - 1, prob))
-        end
-        return unique(x -> x.sol, NPrime)
-    else
-        return unique(x -> x.sol, N)
-    end
+    return N
 end
 
-function swap_neighborhood(x::solution, k::Int, prob::_bi01IP)
+function neighborhood(x::solution, k::Int, prob::_bi01IP)
     if k == 1
         return voisinage_un_echange(x, prob)
     end
     if k == 2
-        return voisinage_deux_echange(x, prob)
+        return replace_neighborhood(x, prob)
     end
+    return []
 end
 
 function VND_i(x::solution, kPrime_max::Int, i::Int, prob::_bi01IP)
     k = 1
     E::Vector{solution} = [x]
     xPrime = x
-    while k < kPrime_max
-        N::Vector{solution} = union(replace_neighborhood(x, k, prob), swap_neighborhood(x, k, prob))
+    while k <= kPrime_max
+        N::Vector{solution} = neighborhood(x, k, prob)
         zPrime = minimum(x -> x.val_objectif[i], N)
         for element in N
             if element.val_objectif[i] == zPrime
@@ -265,6 +263,7 @@ end
 
 function GVNS(E::Array{solution,1}, k_max::Int, t_max::Int, type_shake::Int, prob::_bi01IP, r = 2, kPrime_max = 2)
     t = 0.0
+    loops = 0
     start = time()
     while t < t_max
         k = 1
@@ -274,8 +273,9 @@ function GVNS(E::Array{solution,1}, k_max::Int, t_max::Int, type_shake::Int, pro
             E, k = neighborhood_change(E, ESecond, k)
             t = time() - start
         end
+        loops += 1
     end
-    println("time used : ", t)
+    println("time used : ", t, " loops : ", loops)
     return E
 end
 
@@ -292,4 +292,32 @@ function initPop(nIndiv::Int, prob::_bi01IP)
         push!(population, sol)
     end
     return sort(population, by = x -> x.val_objectif)
+end
+
+include("tools.jl")
+function initPopEpsilon(nIndiv::Int, prob::_bi01IP)
+    x1 = solution([], pointsExtremes(prob, 1), [])
+    x2 = solution([], pointsExtremes(prob, 2), [])
+    pop::Vector{solution} = [x1, x2]
+    verification(prob, x1)
+    verification(prob, x2)
+    delta2 = abs(x2.val_objectif[2] - x1.val_objectif[2])
+    delta1 = abs(x2.val_objectif[2] - x1.val_objectif[2])
+    step = delta2 / nIndiv / 2
+    i = 1
+    while i * step < delta2
+        x = solution([], solutionEpsilon(prob, 1, -x1.val_objectif[2] + i * step), [])
+        @assert verification(prob, x)
+        push!(pop, x)
+        i += 1
+    end
+    step = delta1 / nIndiv / 2
+    i = 1
+    while i * step < delta1
+        x = solution([], solutionEpsilon(prob, 2, -x2.val_objectif[1] + i * step), [])
+        @assert verification(prob, x)
+        push!(pop, x)
+        i += 1
+    end
+    return pop
 end
