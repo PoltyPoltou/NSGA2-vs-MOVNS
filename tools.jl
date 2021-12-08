@@ -1,4 +1,4 @@
-using JuMP, GLPK
+using JuMP, GLPK, CPLEX
 include("MOKP.jl")
 function TOOL_read_YN(name)
 
@@ -17,9 +17,20 @@ function TOOL_read_YN(name)
     return YN
 end
 
-function pointsExtremes(prob::_bi01IP, obj::Int)
-    model = Model(with_optimizer(GLPK.Optimizer))
+function TOOL_write_YN(YN::Vector{Vector{Int}}, name)
+    way = string("YN/" * name * ".txt")
+    open(way, "w") do f
 
+        println(f, string(length(YN)))
+        for i = 1:length(YN)
+            println(f, string(YN[i][1], " ", YN[i][2]))
+        end
+    end
+end
+
+function pointsExtremes(prob::_bi01IP, obj::Int)
+    model = Model(with_optimizer(CPLEX.Optimizer))
+    set_silent(model)
     @variable(model, x[1:size(prob.C, 2)], Bin)
 
     @constraint(model, [i = 1:length(prob.b)], sum((prob.A[i, j] * x[j]) for j = 1:size(prob.C, 2)) <= prob.b[i])
@@ -30,10 +41,12 @@ function pointsExtremes(prob::_bi01IP, obj::Int)
         @objective(model, Max, sum((prob.C[2, i]) * x[i] for i = 1:size(prob.C, 2)))
     end
     optimize!(model)
-    return value.(x)
+    return round.(value.(x))
 end
+
 function solutionEpsilon(prob::_bi01IP, obj::Int, epsilon)
-    model = Model(with_optimizer(GLPK.Optimizer))
+    model = Model(with_optimizer(CPLEX.Optimizer))
+    set_silent(model)
 
     @variable(model, x[1:size(prob.C, 2)], Bin)
 
@@ -47,7 +60,7 @@ function solutionEpsilon(prob::_bi01IP, obj::Int, epsilon)
         @constraint(model, sum((prob.C[1, i]) * x[i] for i = 1:size(prob.C, 2)) >= epsilon)
     end
     optimize!(model)
-    return value.(x)
+    return round.(Int, value.(x))
 end
 
 
@@ -58,7 +71,6 @@ function compareHV(YN1::Vector{Vector{Int}}, YN2::Vector{Vector{Int}})
     sort!(by = x -> x[1], YN2)
     minY1 = minimum(x -> x[1], union(YN1, YN2))
     minY2 = minimum(x -> x[2], union(YN1, YN2))
-    nadirPoint = (minY1, minY2)
     hypervolume1::Float64 = 0
     hypervolume2::Float64 = 0
     for j = 1:length(YN1)
@@ -76,4 +88,8 @@ function compareHV(YN1::Vector{Vector{Int}}, YN2::Vector{Vector{Int}})
         end
     end
     return hypervolume1, hypervolume2, hypervolume1 / hypervolume2
+end
+
+function getYNfromVNS(solutions::Vector{solution})
+    return map(x -> -x.val_objectif, sols)
 end
