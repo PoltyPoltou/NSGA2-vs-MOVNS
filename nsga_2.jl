@@ -18,7 +18,7 @@ function copy(a::Individu)
     return Individu(copy(a.x), copy(a.y), copy(a.rang), copy(a.listeDomines), copy(a.nbDomine), copy(a.distanceCrowding))
 end
 
-function verification(prob::_bi01IP, x::solution)
+function verification_NSGA(prob::_bi01IP, x::solution)
     poids = zeros(size(prob.A, 1))
     objectif = [0, 0]
     for i = 1:size(prob.A, 1)
@@ -57,7 +57,7 @@ function genererPopulation(nIndividus::Int, prob::_bi01IP)
         sol = solution([], zeros(size(prob.C, 2)), [])
         rand_indexes = randperm(length(sol.sol))
         idx = 1
-        while verification(prob, sol)
+        while verification_NSGA(prob, sol)
             sol.sol[rand_indexes[idx]] = 1
             idx += 1
         end

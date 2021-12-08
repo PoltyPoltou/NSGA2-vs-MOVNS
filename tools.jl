@@ -90,6 +90,3 @@ function compareHV(YN1::Vector{Vector{Int}}, YN2::Vector{Vector{Int}})
     return hypervolume1, hypervolume2, hypervolume1 / hypervolume2
 end
 
-function getYNfromVNS(solutions::Vector{solution})
-    return map(x -> -x.val_objectif, sols)
-end

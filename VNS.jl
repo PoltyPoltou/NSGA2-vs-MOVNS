@@ -2,11 +2,9 @@ import Base.copy
 import Base.==
 import Random.randperm
 include("MOKP.jl")
-mutable struct solution
-    val_objectif::Vector{Int64}
-    sol::Vector{Int64}
-    cout::Vector{Int64}
-end
+include("tools.jl")
+
+
 
 function copy(x::solution)
     return solution(copy(x.val_objectif), copy(x.sol), copy(x.cout))
@@ -132,21 +130,6 @@ function swap(x::solution, k::Int, prob::_bi01IP)
     return xPrime
 end
 
-function replace(x::solution, k::Int, prob::_bi01IP)
-    iter = 0
-    xPrime = copy(x)
-    while iter < k
-        random_idx = rand(1:length(xPrime.sol))
-        xPrime.sol[random_idx] = (xPrime.sol[random_idx] + 1) % 2
-        if verification(prob, xPrime)
-            iter += 1
-        else
-            xPrime.sol[random_idx] = (xPrime.sol[random_idx] + 1) % 2
-        end
-    end
-    return xPrime
-end
-
 function shake(x::solution, k::Int, type_shake::Int, prob::_bi01IP)
     if type_shake == 1
         return swap(x, k, prob)
@@ -160,10 +143,11 @@ function shake(x::solution, k::Int, type_shake::Int, prob::_bi01IP)
 end
 
 function mo_shake(E::Array{solution,1}, k::Int, type_shake::Int, prob::_bi01IP)
-    EPrime::Vector{solution} = []
+    EPrime = Vector{solution}(undef, length(E))
+    len = 1
     for element in E
-        xPrime = shake(element, k, type_shake, prob)
-        push!(EPrime, xPrime)
+        EPrime[len] = shake(element, k, type_shake, prob)
+        len += 1
     end
     return EPrime
 end
@@ -278,9 +262,9 @@ function GVNS(E::Array{solution,1}, k_max::Int, t_max::Int, type_shake::Int, pro
     println("time used : ", t, " loops : ", loops)
     return E
 end
-
 function initPop(nIndiv::Int, prob::_bi01IP)
-    population::Vector{solution} = []
+    population = Vector{solution}(undef, nIndiv)
+    len = 1
     for i = 1:nIndiv
         sol::solution = solution([], zeros(size(prob.C, 2)), [])
         rand_indexes = randperm(length(sol.sol))
@@ -289,12 +273,12 @@ function initPop(nIndiv::Int, prob::_bi01IP)
             sol.sol[rand_indexes[idx]] = 1
             idx += 1
         end
-        push!(population, sol)
+        population[len] = sol
+        len += 1
     end
     return sort(population, by = x -> x.val_objectif)
 end
 
-include("tools.jl")
 function initPopEpsilon(nIndiv::Int, prob::_bi01IP)
     x1 = solution([], pointsExtremes(prob, 1), [])
     x2 = solution([], pointsExtremes(prob, 2), [])
@@ -302,7 +286,7 @@ function initPopEpsilon(nIndiv::Int, prob::_bi01IP)
     verification(prob, x1)
     verification(prob, x2)
     delta2 = abs(x2.val_objectif[2] - x1.val_objectif[2])
-    delta1 = abs(x2.val_objectif[2] - x1.val_objectif[2])
+    delta1 = abs(x2.val_objectif[1] - x1.val_objectif[1])
     step = delta2 / nIndiv / 2
     i = 1
     while i * step < delta2
@@ -320,4 +304,8 @@ function initPopEpsilon(nIndiv::Int, prob::_bi01IP)
         i += 1
     end
     return pop
+end
+
+function get_YN_VNS(solutions::Vector{solution})
+    return map(x -> -x.val_objectif, solutions)
 end

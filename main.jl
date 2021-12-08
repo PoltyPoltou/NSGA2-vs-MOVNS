@@ -15,9 +15,11 @@ dat1 = _bi01IP(momkpZL.P[1:2, :], momkpZL.W, momkpZL.ω)
 print("temps gen pop : ")
 @time pop = initPopEpsilon(20, dat1)
 #VNS
+println("VNS")
 VNS_sol = GVNS(pop, 2, 10, 1, dat1, 2, 2)
 YN_VNS = get_YN_VNS(VNS_sol)
 # NSGA-II
+println("NSGA")
 nGenerations = 100000
 nIndividus = 100 #size(prob.C)[2]
 probCrossover = 0.9
