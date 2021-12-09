@@ -57,13 +57,15 @@ function verification(prob::_bi01IP, x::solution)
 end
 
 function verification_swap(prob::_bi01IP, x::solution, i::Int, j::Int)
+    delta_cout = zeros(size(prob.A, 1))
     for l = 1:size(prob.A, 1)
-        x.cout[l] += prob.A[l, j] * (x.sol[j] - x.sol[i]) + prob.A[l, i] * (x.sol[i] - x.sol[j])
+        delta_cout[l] += prob.A[l, j] * (x.sol[j] - x.sol[i]) + prob.A[l, i] * (x.sol[i] - x.sol[j])
     end
-    x.val_objectif[1] -= prob.C[1, j] * (x.sol[j] - x.sol[i]) + prob.C[1, i] * (x.sol[i] - x.sol[j])
-    x.val_objectif[2] -= prob.C[2, j] * (x.sol[j] - x.sol[i]) + prob.C[2, i] * (x.sol[i] - x.sol[j])
 
-    if sum(x.cout .<= prob.b) == length(prob.b)
+    if sum(x.cout + delta_cout .<= prob.b) == length(prob.b)
+        x.val_objectif[1] -= prob.C[1, j] * (x.sol[j] - x.sol[i]) + prob.C[1, i] * (x.sol[i] - x.sol[j])
+        x.val_objectif[2] -= prob.C[2, j] * (x.sol[j] - x.sol[i]) + prob.C[2, i] * (x.sol[i] - x.sol[j])
+        x.cout += delta_cout
         return true
     else
         return false
@@ -115,7 +117,7 @@ function swap(x::solution, k::Int, prob::_bi01IP)
         rand1 = swap_tuples1[swap_idx1]
         rand2 = swap_tuples2[swap_idx2]
         xPrime.sol[rand1], xPrime.sol[rand2] = xPrime.sol[rand2], xPrime.sol[rand1]
-        if verification_swap(prob, xPrime, rand1, rand2)
+        if verification(prob, xPrime)
             iter += 1
         else
             xPrime.sol[rand1], xPrime.sol[rand2] = xPrime.sol[rand1], xPrime.sol[rand2]
@@ -128,6 +130,7 @@ function swap(x::solution, k::Int, prob::_bi01IP)
             return x
         end
     end
+    @assert verification(prob, xPrime)
     return xPrime
 end
 
