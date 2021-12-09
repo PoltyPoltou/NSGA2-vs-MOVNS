@@ -21,7 +21,8 @@ end
 # Sélectionne les points pour former l'ensemble bornant primal
 function kung(E::Array{solution,1}, EPrime::Array{solution,1})
     S = union(E, EPrime)
-    sort!(S, by = x -> x.val_objectif[1] + x.val_objectif[2] / 100000)
+    maxDeltaY2 = maximum(x -> x.val_objectif[2], S) - minimum(x -> x.val_objectif[2], S)
+    sort!(S, by = x -> x.val_objectif[1] + x.val_objectif[2] / maxDeltaY2)
     SN::Vector{solution} = []
     push!(SN, S[1])
     minYFeas = S[1].val_objectif
@@ -208,17 +209,21 @@ function VND_i(x::solution, kPrime_max::Int, i::Int, prob::_bi01IP)
     xPrime = x
     while k <= kPrime_max
         N::Vector{solution} = neighborhood(x, k, prob)
-        zPrime = minimum(x -> x.val_objectif[i], N)
-        for element in N
-            if element.val_objectif[i] == zPrime
-                xPrime = element
-                break
+        if length(N) > 0
+            zPrime = minimum(x -> x.val_objectif[i], N)
+            for element in N
+                if element.val_objectif[i] == zPrime
+                    xPrime = element
+                    break
+                end
             end
-        end
-        E = kung(E, N)
-        if xPrime.val_objectif[i] < x.val_objectif[i]
-            x = xPrime
-            k = 1
+            E = kung(E, N)
+            if xPrime.val_objectif[i] < x.val_objectif[i]
+                x = xPrime
+                k = 1
+            else
+                k += 1
+            end
         else
             k += 1
         end
