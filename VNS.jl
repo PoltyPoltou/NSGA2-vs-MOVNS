@@ -73,7 +73,7 @@ function verification_swap(prob::_bi01IP, x::solution, i::Int, j::Int)
 end
 
 function no_dominated(x::solution, E::Array{solution,1})
-    # E must be sorted lexicographically to work
+    # E must be sorted lexicographically to work
     pos = 0
     while pos + 1 <= length(E) && x.val_objectif[1] >= E[pos+1].val_objectif[1]
         pos += 1
@@ -83,8 +83,7 @@ function no_dominated(x::solution, E::Array{solution,1})
     elseif pos == length(E)
         return x.val_objectif[2] < E[pos].val_objectif[2]
     else
-        x.val_objectif[2] == E[pos+1].val_objectif[2]
-        return x.val_objectif[2] < E[pos].val_objectif[2]
+        return x.val_objectif[2] < E[pos+1].val_objectif[2]
     end
 end
 
@@ -176,7 +175,7 @@ function voisinage_un_echange(x::solution, prob::_bi01IP)
     for i = 1:length(x.sol)
         for j = i+1:length(x.sol)
             xPrime = swap(x, i, j)
-            if verification_swap(prob, xPrime, i, j) && x != xPrime
+            if verification(prob, xPrime) && x != xPrime
                 N[index] = xPrime
                 index += 1
             end
